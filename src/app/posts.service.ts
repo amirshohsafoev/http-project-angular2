@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Post } from './post.model';
-import {map} from 'rxjs/operators'
+import {map, catchError} from 'rxjs/operators'
+import { Subject, throwError } from 'rxjs';
 
 @Injectable({providedIn: 'root'})
 export class PostsService{
-
+    error = new Subject<string>()
 
     constructor(private http: HttpClient){}
 
@@ -19,11 +20,13 @@ export class PostsService{
       )
       .subscribe(responseData => {
         console.log(responseData);
+      }, error => {
+          this.error.next(error.message)
       });
     }
 
     fetchPosts(){
-        this.http
+    return this.http
     .get<{[key: string]: Post}>('https://http-project-angular.firebaseio.com/posts.json')
     .pipe(map((responseData)=>{
       const postsArray: Post[] = []
@@ -33,8 +36,16 @@ export class PostsService{
         }
       }
       return postsArray
-    }))
-    .subscribe(posts => {
+    }),
+    catchError(errorRes => {
+        //Send to analytics server
+        return throwError(errorRes)
     })
+    )
+    }
+
+
+    deletePost(){
+        return this.http.delete('https://http-project-angular.firebaseio.com/posts.json')
     }
 }
