@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Post } from './post.model';
 import {map, catchError} from 'rxjs/operators'
 import { Subject, throwError } from 'rxjs';
+import { ProviderAstType } from '@angular/compiler';
 
 @Injectable({providedIn: 'root'})
 export class PostsService{
@@ -26,8 +27,14 @@ export class PostsService{
     }
 
     fetchPosts(){
+        let searchParams = new HttpParams()
+        searchParams = searchParams.append('print', 'pretty')
+        searchParams =searchParams.append('custom', 'key')
     return this.http
-    .get<{[key: string]: Post}>('https://http-project-angular.firebaseio.com/posts.json')
+    .get<{[key: string]: Post}>('https://http-project-angular.firebaseio.com/posts.json', {
+        headers: new HttpHeaders({"Custom-Header": "Hello!"}),
+        params: searchParams
+    })
     .pipe(map((responseData)=>{
       const postsArray: Post[] = []
       for(const key in responseData){
